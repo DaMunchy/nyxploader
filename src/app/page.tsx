@@ -45,19 +45,27 @@ export default function Home() {
     const formData = new FormData()
     formData.append('file', file)
 
-    try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      })
+   try {
+  const res = await fetch("/api/upload", {
+    method: "POST",
+    body: formData,
+  });
 
-      const data = await res.json()
-      setUrl(data.url)
-      setShowResult(true)
-    } catch (err) {
-      setUrl('')
-      console.error(err)
-    }
+  const data = await res.json();
+  console.log("Upload response:", data);
+
+  if (!res.ok) {
+    throw new Error(data?.error || "Upload failed");
+  }
+
+  setUrl(data.url); 
+  setShowResult(true); // ⬅️ Jangan lupa ini juga ditaruh sini!
+} catch (err) {
+  console.error("Upload error:", err);
+  setUrl("");
+  setShowResult(false);
+}
+
 
     setIsLoading(false)
     setFile(null)
