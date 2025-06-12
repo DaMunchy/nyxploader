@@ -1,35 +1,29 @@
-import { writeFile, mkdir } from 'fs/promises'
-import path from 'path'
 import { NextRequest, NextResponse } from 'next/server'
+import { writeFile } from 'fs/promises'
+import path from 'path'
+import { randomBytes } from 'crypto'
+import { mkdirSync, existsSync } from 'fs'
 
 export async function POST(req: NextRequest) {
-  try {
-    const data = await req.formData()
-    const file = data.get('file') as File
+  const data = await req.formData()
+  const file: File | null = data.get('file') as File
 
-    if (!file) {
-      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
-    }
-
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-
-    const ext = file.name.split('.').pop()
-    const shortId = Math.random().toString(36).substring(2, 8)
-    const filename = `img_${shortId}.${ext}`
-
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads')
-    await mkdir(uploadDir, { recursive: true })
-    const filepath = path.join(uploadDir, filename)
-    await writeFile(filepath, buffer)
-
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://nyxploader.vercel.app'
-
-    return NextResponse.json({ url: `${baseUrl}/${filename}` }) // tanpa /uploads
-  } catch (error) {
-    console.error('Upload error:', error)
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
+  if (!file) {
+    return NextResponse.json({ error: 'No file provided' }, { status: 400 })
   }
+
+  const bytes = await file.arrayBuffer()
+  const buffer = Buffer.from(bytes)
+
+  const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
+  if (!existsSync(uploadsDir)) mkdirSync(uploadsDir, { recursive: true })
+
+  const ext = file.name.split('.').pop()
+  const fileName = `file_${randomBytes(6).toString('hex')}.${ext}`
+  const filePath = path.join(uploadsDir, fileName)
+
+  await writeFile(filePath, buffer)
+
+  const fullUrl = `https://nyxploader.vercel.app/${fileName}`
+  return NextResponse.json({ url: fullUrl })
 }
