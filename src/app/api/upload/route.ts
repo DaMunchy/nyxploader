@@ -13,5 +13,11 @@ export async function POST(req: Request) {
     access: "public",
   });
 
-  return NextResponse.json({ url: blob.url });
+  // blob.url will be like: https://...vercel-storage.com/file.jpg
+  // But with vercel.json rewrite, we can return custom domain
+  const fileName = encodeURIComponent(file.name.replace(/\s+/g, "_"));
+
+  return NextResponse.json({
+    url: `https://nyxploader.vercel.app/${fileName}`
+  });
 }
