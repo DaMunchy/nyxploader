@@ -1,90 +1,85 @@
-'use client'
+"use client";
 
-import { useState, useRef } from 'react'
-import { UploadCloud, Copy } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
-import LoadingScreen from '@/components/LoadingScreen'
+import { useState, useRef } from "react";
+import { UploadCloud, Copy } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import LoadingScreen from "@/components/LoadingScreen";
 
 export default function Home() {
-  const [file, setFile] = useState<File | null>(null)
-  const [url, setUrl] = useState('')
-  const [selectedFileName, setSelectedFileName] = useState('Select or drop files')
-  const [fileErrorVisible, setFileErrorVisible] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [showResult, setShowResult] = useState(false)
-  const [copyMessageVisible, setCopyMessageVisible] = useState(false)
+  const [file, setFile] = useState<File | null>(null);
+  const [url, setUrl] = useState("");
+  const [selectedFileName, setSelectedFileName] = useState(
+    "Select or drop files"
+  );
+  const [fileErrorVisible, setFileErrorVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showResult, setShowResult] = useState(false);
+  const [copyMessageVisible, setCopyMessageVisible] = useState(false);
 
-  const inputRef = useRef<HTMLInputElement | null>(null)
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files?.[0] || null
-    setFile(selected)
+    const selected = e.target.files?.[0] || null;
+    setFile(selected);
     if (selected) {
-      setSelectedFileName(selected.name)
-      setFileErrorVisible(false)
+      setSelectedFileName(selected.name);
+      setFileErrorVisible(false);
     } else {
-      setSelectedFileName('Select or drop files')
+      setSelectedFileName("Select or drop files");
     }
-    setShowResult(false)
-    setCopyMessageVisible(false)
-  }
+    setShowResult(false);
+    setCopyMessageVisible(false);
+  };
 
   const handleUpload = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!file) {
-      setFileErrorVisible(true)
-      return
+      setFileErrorVisible(true);
+      return;
     }
 
-    setFileErrorVisible(false)
-    setShowResult(false)
-    setCopyMessageVisible(false)
-    setIsLoading(true)
+    setFileErrorVisible(false);
+    setShowResult(false);
+    setCopyMessageVisible(false);
+    setIsLoading(true);
 
-    const formData = new FormData()
-    formData.append('file', file)
+    const formData = new FormData();
+    formData.append("file", file);
 
-   try {
-  const res = await fetch("/api/upload", {
-    method: "POST",
-    body: formData,
-  });
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-  const data = await res.json();
-  console.log("Upload response:", data);
+      const data = await res.json();
+      setUrl(data.url);
+      setShowResult(true);
+    } catch (err) {
+      console.error("Upload failed:", err);
+      setUrl("");
+      setShowResult(false);
+    }
 
-  if (!res.ok) {
-    throw new Error(data?.error || "Upload failed");
-  }
-
-  setUrl(data.url); 
-  setShowResult(true); // ⬅️ Jangan lupa ini juga ditaruh sini!
-} catch (err) {
-  console.error("Upload error:", err);
-  setUrl("");
-  setShowResult(false);
-}
-
-
-    setIsLoading(false)
-    setFile(null)
-    setSelectedFileName('Select or drop files')
-    if (inputRef.current) inputRef.current.value = ''
-  }
+    setIsLoading(false);
+    setFile(null);
+    setSelectedFileName("Select or drop files");
+    if (inputRef.current) inputRef.current.value = "";
+  };
 
   const handleCopy = () => {
-    if (!url) return
-    const temp = document.createElement('textarea')
-    temp.value = url
-    document.body.appendChild(temp)
-    temp.select()
-    document.execCommand('copy')
-    document.body.removeChild(temp)
+    if (!url) return;
+    const temp = document.createElement("textarea");
+    temp.value = url;
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand("copy");
+    document.body.removeChild(temp);
 
-    setCopyMessageVisible(true)
-    setTimeout(() => setCopyMessageVisible(false), 2000)
-  }
+    setCopyMessageVisible(true);
+    setTimeout(() => setCopyMessageVisible(false), 2000);
+  };
 
   return (
     <>
@@ -113,59 +108,60 @@ export default function Home() {
             transition={{ duration: 0.6 }}
           >
             <div
-  onClick={() => inputRef.current?.click()}
-  onDragOver={(e) => e.preventDefault()}
-  onDrop={(e) => {
-    e.preventDefault()
-    const droppedFile = e.dataTransfer.files?.[0]
-    if (droppedFile) {
-      setFile(droppedFile)
-      setSelectedFileName(droppedFile.name)
-      setFileErrorVisible(false)
-      setShowResult(false)
-      setCopyMessageVisible(false)
-    }
-  }}
-  className="cursor-pointer bg-purple-600 hover:bg-purple-800 transition-all duration-300 px-5 py-6 rounded-xl flex flex-col items-center justify-center gap-2 font-semibold text-white shadow-md hover:shadow-lg border-2 border-dashed border-purple-400 text-center"
->
-  <UploadCloud size={28} />
-  <span className="text-sm">{selectedFileName || 'Select or drop files'}</span>
-  <input
-    type="file"
-    accept="*"
-    onChange={handleFileChange}
-    className="hidden"
-    ref={inputRef}
-  />
-</div>
-{file && (
-  <div className="mt-2 text-center">
-    {file.type.startsWith('image/') ? (
-      <img
-        src={URL.createObjectURL(file)}
-        alt="preview"
-        className="mx-auto max-h-48 rounded-lg shadow-md"
-      />
-    ) : file.type.startsWith('video/') ? (
-      <video
-        src={URL.createObjectURL(file)}
-        className="mx-auto max-h-48 rounded-lg shadow-md"
-        controls
-      />
-    ) : (
-      <div className="flex flex-col items-center justify-center">
-        <div className="bg-white/10 text-white text-sm px-4 py-2 rounded-md shadow-md">
-          <p className="font-semibold">Selected file:</p>
-          <p className="text-purple-200">{file.name}</p>
-          <p className="text-purple-300 text-xs italic">{file.type || 'Unknown type'}</p>
-        </div>
-      </div>
-    )}
-  </div>
-)}
-
-
-
+              onClick={() => inputRef.current?.click()}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                const droppedFile = e.dataTransfer.files?.[0];
+                if (droppedFile) {
+                  setFile(droppedFile);
+                  setSelectedFileName(droppedFile.name);
+                  setFileErrorVisible(false);
+                  setShowResult(false);
+                  setCopyMessageVisible(false);
+                }
+              }}
+              className="cursor-pointer bg-purple-600 hover:bg-purple-800 transition-all duration-300 px-5 py-6 rounded-xl flex flex-col items-center justify-center gap-2 font-semibold text-white shadow-md hover:shadow-lg border-2 border-dashed border-purple-400 text-center"
+            >
+              <UploadCloud size={28} />
+              <span className="text-sm">
+                {selectedFileName || "Select or drop files"}
+              </span>
+              <input
+                type="file"
+                accept="*"
+                onChange={handleFileChange}
+                className="hidden"
+                ref={inputRef}
+              />
+            </div>
+            {file && (
+              <div className="mt-2 text-center">
+                {file.type.startsWith("image/") ? (
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt="preview"
+                    className="mx-auto max-h-48 rounded-lg shadow-md"
+                  />
+                ) : file.type.startsWith("video/") ? (
+                  <video
+                    src={URL.createObjectURL(file)}
+                    className="mx-auto max-h-48 rounded-lg shadow-md"
+                    controls
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="bg-white/10 text-white text-sm px-4 py-2 rounded-md shadow-md">
+                      <p className="font-semibold">Selected file:</p>
+                      <p className="text-purple-200">{file.name}</p>
+                      <p className="text-purple-300 text-xs italic">
+                        {file.type || "Unknown type"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <AnimatePresence>
               {fileErrorVisible && (
@@ -189,10 +185,11 @@ export default function Home() {
             >
               {isLoading ? (
                 <>
-                  <span className="loading-spinner border-gray-700 border-t-purple-400"></span> Uploading...
+                  <span className="loading-spinner border-gray-700 border-t-purple-400"></span>{" "}
+                  Uploading...
                 </>
               ) : (
-                'Upload'
+                "Upload"
               )}
             </motion.button>
           </motion.form>
@@ -242,9 +239,11 @@ export default function Home() {
         </motion.div>
 
         <footer className="text-center text-sm text-purple-200 py-4 bg-purple-900/50 border-t border-purple-700">
-          © {new Date().getFullYear()} <span className="font-semibold">Nyxploader</span> Powered By Munchy. All rights reserved.
+          © {new Date().getFullYear()}{" "}
+          <span className="font-semibold">Nyxploader</span> Powered By Munchy.
+          All rights reserved.
         </footer>
       </main>
     </>
-  )
+  );
 }
