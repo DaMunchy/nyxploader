@@ -1,8 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/:file",
-      "destination": "https://eevds0nzojhmnnal.public.blob.vercel-storage.com/:file"
+      "source": "/:filename",
+      "destination": "https://nyxploader.vercel-storage.com/:filename"
     }
   ]
 }
