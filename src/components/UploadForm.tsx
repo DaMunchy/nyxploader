@@ -29,7 +29,7 @@ export default function UploadForm() {
       } else {
         setError(result.error || 'Upload gagal')
       }
-    } catch (err) {
+    } catch {
       setError('Terjadi kesalahan.')
     } finally {
       setLoading(false)
